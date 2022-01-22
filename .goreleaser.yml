@@ -1,0 +1,61 @@
+before:
+  hooks:
+    - go generate -v ./...
+builds:
+- id: i18nsvr
+  env:
+  - CGO_ENABLED=0
+  main: server.go
+  binary: i18nsvr
+  ldflags:
+  - -s -w -X github.com/bhojpur/i18n/cmd/server.version={{.Version}}-{{.ShortCommit}}
+- id: i18nctl
+  env:
+  - CGO_ENABLED=0
+  main: client.go
+  binary: i18nctl
+  flags:
+    - -tags=i18nctl
+  ldflags:
+  - -s -w -X github.com/bhojpur/i18n/cmd/client.version={{.Version}}-{{.ShortCommit}}
+archives:
+- id: i18nsvr
+  replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+  builds:
+  - i18nsvr
+- id: i18nctl
+  files:
+  - "none*"
+  format: binary
+  builds:
+  - i18nctl
+  replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+release:
+  prerelease: auto
+dockers:
+  - goos: linux
+    goarch: amd64
+    goarm: ''
+    dockerfile: Dockerfile
+    image_templates:
+    - "ghcr.io/bhojpur/i18n:{{ .Tag }}"
+    extra_files:
+    - README.md
